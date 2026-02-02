@@ -7,7 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@200;300;400;500;600;700&family=Outfit:wght@800&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
@@ -17,6 +17,7 @@
                 extend: {
                     fontFamily: {
                         sans: ['Mali', 'cursive'],
+                        display: ['Outfit', 'sans-serif'], // ฟอนต์ใหม่สำหรับหัวข้อ
                     },
                     colors: {
                         'main-bg': '#F8F9FA',
@@ -28,11 +29,35 @@
         }
     </script>
     <style>
-        /* Force Font */
-        body, button, input, div, span, h1, h2, h3, p, a {
+        /* Force Font Mali สำหรับเนื้อหาทั่วไป */
+        body, button, input, div, span, h2, h3, p, a {
             font-family: 'Mali', cursive !important;
         }
         
+        /* Animation: Shimmer Effect สำหรับหัวข้อ */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .shimmer-text {
+            font-family: 'Outfit', sans-serif !important; /* บังคับใช้ Outfit */
+            background: linear-gradient(
+                90deg, 
+                #2C3E50 0%, 
+                #2C3E50 40%, 
+                #A0AEC0 50%, 
+                #2C3E50 60%, 
+                #2C3E50 100%
+            );
+            background-size: 200% auto;
+            color: #2C3E50;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
         /* Timeline Line */
         .timeline-line::before {
             content: '';
@@ -57,9 +82,12 @@
 <body class="bg-main-bg text-gray-700 min-h-screen">
 
     <div id="landing-view" class="max-w-md mx-auto p-6 fade-in min-h-screen flex flex-col justify-center">
-        <header class="text-center mb-10">
-            <h1 class="text-5xl font-bold text-accent-blue tracking-wider mb-2">JAPAN <span class="text-3xl font-light">2026</span></h1>
-            <p class="text-gray-400 text-base">Select a day to view timeline</p>
+        
+        <header class="text-center mb-12">
+            <h1 class="shimmer-text text-6xl tracking-tighter uppercase leading-none mb-2">
+                Japan<br><span class="text-5xl">2026</span>
+            </h1>
+            <p class="text-gray-400 text-sm font-medium tracking-widest mt-3 uppercase">Travel Itinerary</p>
         </header>
 
         <div id="loading" class="text-center py-10">
@@ -114,16 +142,16 @@
 
         // --- Helper: เลือก Emoji ตามวัน ---
         function getDayEmoji(dayText) {
-            const d = dayText.toLowerCase().replace(/\s/g, ''); // ตัดช่องว่างออก เช่น "Day 1" -> "day1"
+            const d = dayText.toLowerCase().replace(/\s/g, ''); 
             
-            if (d.includes('day1')) return '✈️'; // Day 1
-            if (d.includes('day2')) return '🗻'; // Day 2
-            if (d.includes('day3') || d.includes('day4') || d.includes('day5')) return '🏂'; // Day 3-5
-            if (d.includes('day6')) return '🐻'; // Day 6 (Kumamon -> Bear)
-            if (d.includes('day7')) return '🌋'; // Day 7
-            if (d.includes('day8')) return '✈️'; // Day 8
+            if (d.includes('day1')) return '✈️'; 
+            if (d.includes('day2')) return '🗻'; 
+            if (d.includes('day3') || d.includes('day4') || d.includes('day5')) return '🏂'; 
+            if (d.includes('day6')) return '🐻'; 
+            if (d.includes('day7')) return '🌋'; 
+            if (d.includes('day8')) return '✈️'; 
             
-            return '🇯🇵'; // Default
+            return '🇯🇵'; 
         }
 
         // --- View 1 ---
@@ -140,17 +168,17 @@
             });
 
             daysMap.forEach((val, key) => {
-                const emoji = getDayEmoji(val.dayTitle); // ดึง Emoji
+                const emoji = getDayEmoji(val.dayTitle);
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-3xl shadow-sm border-2 border-transparent hover:border-blue-100 cursor-pointer transition-all active:scale-95 flex items-center justify-between group";
                 card.onclick = () => showTimeline(key);
 
+                // ปรับ Layout: Date อยู่บน, Day อยู่ล่าง
                 card.innerHTML = `
                     <div class="text-left">
-                        <h2 class="text-3xl font-bold text-accent-blue mb-1 group-hover:text-blue-600 transition-colors">${val.dayTitle}</h2>
-                        <p class="text-gray-400 text-lg font-medium">${val.date}</p>
+                        <p class="text-gray-400 text-sm font-bold tracking-widest uppercase mb-1">${val.date}</p> <h2 class="text-3xl font-bold text-accent-blue group-hover:text-blue-600 transition-colors">${val.dayTitle}</h2>
                     </div>
-                    <div class="text-5xl opacity-80 group-hover:scale-110 transition-transform">
+                    <div class="text-5xl opacity-80 group-hover:scale-110 transition-transform filter drop-shadow-sm">
                         ${emoji}
                     </div>
                 `;
@@ -264,7 +292,7 @@
             if (c === 'FOOD') return '🍜';
             if (c === 'TRAVEL') return '🚄';
             if (c === 'SHOPPING') return '🛍️';
-            if (c === 'SNOW') return '🏂'; // เปลี่ยนเป็น Snowboard ตามธีม Snow
+            if (c === 'SNOW') return '🏂'; 
             if (c === 'HOTEL') return '🏨';
             if (c.includes('COFFEE') || c.includes('MATCHA')) return '🍵';
             return '📌';
