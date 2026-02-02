@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Japan Trip 🎌</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Mali', 'cursive'],
+                    },
+                    colors: {
+                        'pastel-bg': '#FFF9F0',      // พื้นหลังครีมๆ
+                        'pastel-pink': '#FFB7B2',    // ชมพู
+                        'pastel-green': '#B5EAD7',   // เขียวมิ้นท์
+                        'pastel-purple': '#E2F0CB',  // ม่วงอ่อน (จริงๆ โค้ดนี้ดูเขียวอ่อน แต่ตั้งชื่อตามพาเลท)
+                        'pastel-blue': '#C7CEEA',    // ฟ้าตุ่น
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-pastel-bg text-gray-600 min-h-screen p-4 sm:p-8">
+
+    <div class="max-w-2xl mx-auto">
+        
+        <header class="text-center mb-10 transform -rotate-1">
+            <h1 class="text-5xl font-bold text-gray-700 drop-shadow-sm mb-2">
+                Japan 2026 <span class="text-3xl">✈️</span>
+            </h1>
+            <div class="inline-block bg-pastel-pink text-white px-4 py-1 rounded-full text-sm font-bold rotate-2 shadow-sm">
+                Travel Itinerary
+            </div>
+        </header>
+
+        <div id="loading" class="text-center py-12">
+            <div class="animate-bounce text-4xl mb-4">🍡</div>
+            <p>กำลังโหลดแผนเที่ยว...</p>
+        </div>
+
+        <div id="timeline-container" class="space-y-6 hidden">
+            </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
