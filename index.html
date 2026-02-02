@@ -7,7 +7,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@200;300;400;500;600;700&family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@200;300;400;500;600;700&family=Outfit:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
@@ -16,27 +16,42 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Mali', 'cursive'],      // ฟอนต์หลัก (Timeline)
-                        display: ['Outfit', 'sans-serif'], // ฟอนต์หน้าแรก (Header + Cards)
+                        sans: ['Mali', 'cursive'],      // Default font (Mali)
+                        outfit: ['Outfit', 'sans-serif'], // Font for Landing Page
                     },
                     colors: {
                         'main-bg': '#F8F9FA',
                         'accent-blue': '#2C3E50',  
-                        'accent-brown': '#5D4037',
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Animation: Shimmer Effect สำหรับหัวข้อ Japan 2026 */
+        /* Force Font Settings */
+        
+        /* 1. บังคับหน้าแรก (Landing) ให้เป็น Outfit ทั้งหมด */
+        #landing-view, #landing-view * {
+            font-family: 'Outfit', sans-serif !important;
+        }
+
+        /* 2. บังคับหน้า Timeline (Detail) ให้เป็น Mali ทั้งหมด */
+        #detail-view, #detail-view * {
+            font-family: 'Mali', cursive !important;
+        }
+
+        /* ยกเว้นปุ่ม Back ให้ใช้ Outfit เพื่อความสวยงาม */
+        .btn-silver {
+            font-family: 'Outfit', sans-serif !important;
+        }
+
+        /* Shimmer Effect */
         @keyframes shimmer {
             0% { background-position: -200% center; }
             100% { background-position: 200% center; }
         }
         
         .shimmer-text {
-            font-family: 'Outfit', sans-serif !important;
             background: linear-gradient(
                 90deg, 
                 #2C3E50 0%, 
@@ -71,7 +86,6 @@
             backdrop-filter: blur(8px);
             border: 1px solid rgba(200, 200, 200, 0.5);
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            font-family: 'Outfit', sans-serif !important; /* ปุ่ม Back ใช้ Outfit ให้เข้าธีม */
         }
     </style>
 </head>
@@ -83,11 +97,11 @@
             <h1 class="shimmer-text text-7xl font-extrabold tracking-tighter uppercase leading-none mb-2">
                 Japan<br><span class="text-5xl font-bold">2026</span>
             </h1>
-            <p class="text-gray-400 text-xs font-bold tracking-[0.3em] mt-4 uppercase font-display">Travel Itinerary</p>
+            <p class="text-gray-400 text-xs font-bold tracking-[0.3em] mt-4 uppercase">Travel Itinerary</p>
         </header>
 
         <div id="loading" class="text-center py-10">
-            <div class="animate-pulse text-2xl text-gray-400 font-display">Loading... ❄️</div>
+            <div class="animate-pulse text-2xl text-gray-400 font-bold">Loading... ❄️</div>
         </div>
 
         <div id="days-grid" class="grid grid-cols-1 gap-5"></div>
@@ -99,11 +113,11 @@
             <button onclick="showLanding()" class="btn-silver text-accent-blue px-5 py-2 rounded-full font-bold text-sm flex items-center gap-2 hover:bg-white transition-transform active:scale-95 uppercase tracking-wide">
                 ◀ Back
             </button>
-            <div id="detail-title" class="font-display font-bold text-lg text-accent-blue bg-white/80 px-4 py-2 rounded-xl backdrop-blur-md shadow-sm border border-gray-100">
+            <div id="detail-title" class="font-bold text-lg text-accent-blue bg-white/80 px-4 py-2 rounded-xl backdrop-blur-md shadow-sm border border-gray-100">
                 </div>
         </div>
 
-        <div id="timeline-content" class="space-y-8 relative timeline-line pl-2 pr-1 font-sans"></div>
+        <div id="timeline-content" class="space-y-8 relative timeline-line pl-2 pr-1"></div>
 
         <div class="mt-12 text-center">
             <button onclick="showLanding()" class="btn-silver text-accent-blue px-8 py-3 rounded-full font-bold text-base hover:bg-white transition-transform active:scale-95 w-full shadow-md uppercase tracking-wide">
@@ -136,21 +150,19 @@
             });
         }
 
-        // --- Helper: เลือก Emoji ---
+        // --- Helper: Emoji ---
         function getDayEmoji(dayText) {
             const d = dayText.toLowerCase().replace(/\s/g, ''); 
-            
             if (d.includes('day1')) return '✈️'; 
             if (d.includes('day2')) return '🗻'; 
             if (d.includes('day3') || d.includes('day4') || d.includes('day5')) return '🏂'; 
             if (d.includes('day6')) return '🐻'; 
             if (d.includes('day7')) return '🌋'; 
             if (d.includes('day8')) return '✈️'; 
-            
             return '🇯🇵'; 
         }
 
-        // --- View 1: Landing Page (ใช้ Font Outfit ทั้งหมด) ---
+        // --- View 1: Landing Page ---
         function renderDaysGrid(data) {
             const grid = document.getElementById('days-grid');
             document.getElementById('loading').classList.add('hidden');
@@ -166,11 +178,11 @@
             daysMap.forEach((val, key) => {
                 const emoji = getDayEmoji(val.dayTitle);
                 const card = document.createElement('div');
-                // เพิ่ม font-display (Outfit) ให้ Card
-                card.className = "font-display bg-white p-6 rounded-3xl shadow-sm border-2 border-transparent hover:border-blue-100 cursor-pointer transition-all active:scale-95 flex items-center justify-between group";
+                
+                // ใช้ Tailwind classes ปกติ แต่ถูก Override ด้วย CSS ID #landing-view *
+                card.className = "bg-white p-6 rounded-3xl shadow-sm border-2 border-transparent hover:border-blue-100 cursor-pointer transition-all active:scale-95 flex items-center justify-between group";
                 card.onclick = () => showTimeline(key);
 
-                // ปรับ Typography: Date (บน) + Day (ล่าง) แบบ Modern
                 card.innerHTML = `
                     <div class="text-left">
                         <p class="text-gray-400 text-xs font-bold tracking-[0.2em] uppercase mb-2">${val.date}</p> 
@@ -184,7 +196,7 @@
             });
         }
 
-        // --- View 2: Timeline (เนื้อหาข้างใน) ---
+        // --- View 2: Timeline ---
         function showTimeline(selectedDay) {
             document.getElementById('landing-view').classList.add('hidden');
             document.getElementById('detail-view').classList.remove('hidden');
@@ -212,46 +224,38 @@
                     <div class="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border-2 shadow-sm text-2xl bg-white z-10 ${catStyle.border} ${catStyle.bg}">
                         ${categoryIcon}
                     </div>
-
                     <div class="flex-1 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                        
-                        <div class="text-2xl sm:text-3xl font-bold text-accent-blue mb-2 tracking-tight font-sans">
+                        <div class="text-2xl sm:text-3xl font-bold text-accent-blue mb-2 tracking-tight">
                             ${row.Time || ''}
                         </div>
-
                         ${row.Location ? `
                         <div class="mb-3">
-                             <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.Location)}" target="_blank" class="font-sans text-lg sm:text-xl font-bold text-gray-800 hover:text-blue-600 underline decoration-2 decoration-blue-200 underline-offset-4 transition-colors break-words text-balance leading-snug block">
+                             <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.Location)}" target="_blank" class="text-lg sm:text-xl font-bold text-gray-800 hover:text-blue-600 underline decoration-2 decoration-blue-200 underline-offset-4 transition-colors break-words text-balance leading-snug block">
                                 📍 ${row.Location}
                              </a>
                         </div>
                         ` : ''}
-
-                        <div class="font-sans text-gray-500 text-base font-medium leading-relaxed break-words text-balance mb-4">
+                        <div class="text-gray-500 text-base font-medium leading-relaxed break-words text-balance mb-4">
                             ${row.Activity || '-'}
                         </div>
-
                         ${(row.Departure || row.Arrival) ? `
-                            <div class="font-sans flex flex-wrap gap-x-4 gap-y-2 mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 bg-gray-50/50 p-2 rounded-lg">
+                            <div class="flex flex-wrap gap-x-4 gap-y-2 mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 bg-gray-50/50 p-2 rounded-lg">
                                 ${row.Departure ? `<div>🛫 Dep: <span class="font-bold text-accent-blue">${row.Departure}</span></div>` : ''}
                                 ${row.Arrival ? `<div>🛬 Arr: <span class="font-bold text-accent-blue">${row.Arrival}</span></div>` : ''}
                             </div>
                         ` : ''}
-
                         ${row['Map Code'] ? `
-                            <div class="mt-3 text-sm text-gray-400 font-normal border-t border-dashed border-gray-200 pt-2 font-sans">
+                            <div class="mt-3 text-sm text-gray-400 font-normal border-t border-dashed border-gray-200 pt-2">
                                 Map Code: <span class="${catStyle.text} font-medium tracking-wider ml-1">${row['Map Code']}</span>
                             </div>
                         ` : ''}
-                        
-                        ${row.Category ? `
+                         ${row.Category ? `
                             <div class="mt-4 flex justify-end">
-                                <span class="font-sans text-xs font-bold px-3 py-1 rounded-lg uppercase tracking-wider border ${catStyle.bg} ${catStyle.border} ${catStyle.text}">
+                                <span class="text-xs font-bold px-3 py-1 rounded-lg uppercase tracking-wider border ${catStyle.bg} ${catStyle.border} ${catStyle.text}">
                                     ${row.Category.toUpperCase()}
                                 </span>
                             </div>
                         ` : ''}
-
                     </div>
                 `;
                 container.appendChild(item);
@@ -267,15 +271,12 @@
         function getCategoryStyle(cat) {
             if (!cat) return { bg: 'bg-gray-100', border: 'border-gray-200', text: 'text-gray-500' };
             const c = cat.toUpperCase().trim();
-            
-            // เพิ่มความเข้มเฉด 200
             if (c === 'FOOD') return { bg: 'bg-purple-200', border: 'border-purple-300', text: 'text-purple-800' };
             if (c === 'TRAVEL') return { bg: 'bg-pink-200', border: 'border-yellow-500', text: 'text-pink-800' };
             if (c === 'SHOPPING') return { bg: 'bg-red-200', border: 'border-red-300', text: 'text-red-900' };
             if (c === 'SNOW') return { bg: 'bg-sky-200', border: 'border-blue-800', text: 'text-blue-900' };
             if (c === 'HOTEL') return { bg: 'bg-yellow-200', border: 'border-yellow-500', text: 'text-yellow-900' };
             if (c.includes('COFFEE') || c.includes('MATCHA')) return { bg: 'bg-green-200', border: 'border-amber-800', text: 'text-green-900' };
-
             return { bg: 'bg-gray-100', border: 'border-gray-300', text: 'text-gray-600' };
         }
 
