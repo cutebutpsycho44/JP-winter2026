@@ -1,227 +1,96 @@
-<script>
-        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSsNmpYBJTnOp4Wa3lQy3VeTolxfSHKzRaXXGnM2k_C8iq0hYC4MlLLqSIb12Ml8fDDw6AhPp6ePFds/pub?gid=289892197&single=true&output=csv";
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Japan Trip 2026 🎌</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
-        let allData = [];
-
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchData();
-        });
-
-        function fetchData() {
-            const loading = document.getElementById('loading');
-            
-            // เพิ่มการจับเวลา ถ้าโหลดนานเกิน 5 วิ ให้ฟ้อง
-            const timer = setTimeout(() => {
-                if(loading.innerHTML.includes('Loading')) {
-                    loading.innerHTML = `
-                        <div class="text-red-500 font-bold">⚠️ โหลดนานผิดปกติ</div>
-                        <div class="text-sm mt-2">กรุณาเช็คอินเทอร์เน็ต หรือเช็คลิงก์ Google Sheet</div>
-                        <button onclick="location.reload()" class="mt-4 bg-gray-200 px-4 py-2 rounded-full text-sm">ลองใหม่</button>
-                    `;
-                }
-            }, 8000);
-
-            Papa.parse(SHEET_CSV_URL, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    clearTimeout(timer);
-                    console.log("Data loaded:", results.data); // เช็คใน Console
-                    
-                    if (results.data.length === 0) {
-                        loading.innerHTML = "❌ ไม่พบข้อมูลในไฟล์ CSV (ไฟล์ว่างเปล่า)";
-                        return;
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'], 
+                    },
+                    colors: {
+                        'main-bg': '#F8F9FA',
+                        'accent-blue': '#2C3E50',  
                     }
-
-                    // เช็คว่ามีคอลัมน์ Day ไหม
-                    const firstRow = results.data[0];
-                    if (!firstRow.hasOwnProperty('Day')) {
-                        loading.innerHTML = `
-                            <div class="text-red-500 font-bold">❌ ไม่พบคอลัมน์ "Day"</div>
-                            <div class="text-sm mt-2 text-left bg-gray-100 p-4 rounded-lg overflow-auto">
-                                <p>หัวตารางที่คุณมีคือ:</p>
-                                <code class="text-xs text-blue-600">${Object.keys(firstRow).join(', ')}</code>
-                                <p class="mt-2">โปรดเปลี่ยนชื่อคอลัมน์ใน Sheet ให้เป็น <b>Day</b> (ตัว D ใหญ่)</p>
-                            </div>
-                        `;
-                        return;
-                    }
-
-                    allData = results.data;
-                    renderDaysGrid(allData);
-                },
-                error: function(err) {
-                    clearTimeout(timer);
-                    console.error("Error:", err);
-                    loading.innerHTML = `
-                        <div class="text-red-500 font-bold">❌ โหลดข้อมูลไม่ได้</div>
-                        <div class="text-xs mt-2 text-gray-400">${err.message}</div>
-                    `;
                 }
-            });
-        }
-
-        function getDayEmoji(dayText) {
-            if (!dayText) return '📅';
-            const d = dayText.toLowerCase().replace(/\s/g, ''); 
-            if (d.includes('day1')) return '✈️'; 
-            if (d.includes('day2')) return '🗻'; 
-            if (d.includes('day3') || d.includes('day4') || d.includes('day5')) return '🏂'; 
-            if (d.includes('day6')) return '🐻'; 
-            if (d.includes('day7')) return '🌋'; 
-            if (d.includes('day8')) return '✈️'; 
-            return '🇯🇵'; 
-        }
-
-        // --- View 1: Landing Page ---
-        function renderDaysGrid(data) {
-            const grid = document.getElementById('days-grid');
-            const loading = document.getElementById('loading');
-            
-            // เคลียร์ Loading และ Grid
-            loading.classList.add('hidden');
-            grid.innerHTML = '';
-
-            const daysMap = new Map();
-            let hasData = false;
-
-            data.forEach(row => {
-                // เช็คว่า row.Day มีค่าไหม (ไม่ใช่ null หรือ ว่าง)
-                if(!row.Day || row.Day.trim() === '') return;
-                
-                hasData = true;
-                if(!daysMap.has(row.Day)) {
-                    daysMap.set(row.Day, { date: row.Date || '', dayTitle: row.Day });
-                }
-            });
-
-            if (!hasData) {
-                loading.classList.remove('hidden');
-                loading.innerHTML = "❌ อ่านไฟล์ได้ แต่ไม่พบข้อมูลในคอลัมน์ 'Day'<br>ลองเช็คว่ามีแถวว่างๆ คั่นอยู่หรือเปล่าครับ";
-                return;
             }
-
-            daysMap.forEach((val, key) => {
-                const emoji = getDayEmoji(val.dayTitle);
-                const card = document.createElement('div');
-                
-                card.className = "bg-white p-6 rounded-3xl shadow-sm border-2 border-transparent hover:border-blue-100 cursor-pointer transition-all active:scale-95 flex items-center justify-between group";
-                card.onclick = () => showTimeline(key);
-
-                card.innerHTML = `
-                    <div class="text-left">
-                        <p class="text-gray-400 text-xs font-bold tracking-[0.2em] uppercase mb-2">${val.date}</p> 
-                        <h2 class="shimmer-text text-4xl font-bold tracking-tight">${val.dayTitle}</h2>
-                    </div>
-                    <div class="text-5xl opacity-80 group-hover:scale-110 transition-transform filter drop-shadow-sm">
-                        ${emoji}
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // --- View 2: Timeline ---
-        function showTimeline(selectedDay) {
-            document.getElementById('landing-view').classList.add('hidden');
-            document.getElementById('detail-view').classList.remove('hidden');
-            window.scrollTo(0, 0);
-
-            const container = document.getElementById('timeline-content');
-            container.innerHTML = '';
-
-            const dayData = allData.filter(row => row.Day === selectedDay);
-            
-            if(dayData.length > 0) {
-                document.getElementById('detail-title').innerText = `${selectedDay}`;
-            }
-
-            dayData.forEach(row => {
-                // ต้องมี Time หรือ Activity อย่างใดอย่างหนึ่งถึงจะแสดง
-                if ((!row.Activity || row.Activity.trim() === '') && (!row.Time || row.Time.trim() === '')) return;
-
-                const item = document.createElement('div');
-                item.className = "relative flex items-start gap-4 z-10";
-
-                const catStyle = getCategoryStyle(row.Category);
-                const categoryIcon = getCategoryIcon(row.Category);
-
-                item.innerHTML = `
-                    <div class="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border-2 shadow-sm text-2xl bg-white z-10 ${catStyle.border} ${catStyle.bg}">
-                        ${categoryIcon}
-                    </div>
-                    <div class="flex-1 bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                        
-                        <div class="text-2xl sm:text-3xl font-bold text-accent-blue mb-2 tracking-tight">
-                            ${row.Time || ''}
-                        </div>
-                        
-                        ${row.Location ? `
-                        <div class="mb-3">
-                             <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(row.Location)}" target="_blank" class="text-lg sm:text-xl font-semibold text-gray-800 hover:text-blue-600 underline decoration-2 decoration-blue-200 underline-offset-4 transition-colors break-words text-balance leading-snug block">
-                                📍 ${row.Location}
-                             </a>
-                        </div>
-                        ` : ''}
-                        
-                        <div class="text-gray-500 text-base font-medium leading-relaxed break-words text-balance mb-4">
-                            ${row.Activity || '-'}
-                        </div>
-                        
-                        ${(row.Departure || row.Arrival) ? `
-                            <div class="flex flex-wrap gap-x-4 gap-y-2 mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 bg-gray-50/50 p-2 rounded-lg">
-                                ${row.Departure ? `<div>Dep: <span class="font-bold text-accent-blue">${row.Departure}</span></div>` : ''}
-                                ${row.Arrival ? `<div>Arr: <span class="font-bold text-accent-blue">${row.Arrival}</span></div>` : ''}
-                            </div>
-                        ` : ''}
-                        
-                        ${row['Map Code'] ? `
-                            <div class="mt-3 text-sm text-gray-400 font-normal border-t border-dashed border-gray-200 pt-2">
-                                Map Code: <span class="${catStyle.text} font-medium tracking-wider ml-1">${row['Map Code']}</span>
-                            </div>
-                        ` : ''}
-                        
-                        ${row.Category ? `
-                            <div class="mt-4 flex justify-end">
-                                <span class="text-xs font-bold px-3 py-1 rounded-lg uppercase tracking-wider border ${catStyle.bg} ${catStyle.border} ${catStyle.text}">
-                                    ${row.Category.toUpperCase()}
-                                </span>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        function showLanding() {
-            document.getElementById('detail-view').classList.add('hidden');
-            document.getElementById('landing-view').classList.remove('hidden');
-        }
-
-        // Helpers
-        function getCategoryStyle(cat) {
-            if (!cat) return { bg: 'bg-gray-100', border: 'border-gray-200', text: 'text-gray-500' };
-            const c = cat.toUpperCase().trim();
-            if (c === 'FOOD') return { bg: 'bg-purple-200', border: 'border-purple-300', text: 'text-purple-800' };
-            if (c === 'TRAVEL') return { bg: 'bg-pink-200', border: 'border-yellow-500', text: 'text-pink-800' };
-            if (c === 'SHOPPING') return { bg: 'bg-red-200', border: 'border-red-300', text: 'text-red-900' };
-            if (c === 'SNOW') return { bg: 'bg-sky-200', border: 'border-blue-800', text: 'text-blue-900' };
-            if (c === 'HOTEL') return { bg: 'bg-yellow-200', border: 'border-yellow-500', text: 'text-yellow-900' };
-            if (c.includes('COFFEE') || c.includes('MATCHA')) return { bg: 'bg-green-200', border: 'border-amber-800', text: 'text-green-900' };
-            return { bg: 'bg-gray-100', border: 'border-gray-300', text: 'text-gray-600' };
-        }
-
-        function getCategoryIcon(cat) {
-            if (!cat) return '✨';
-            const c = cat.toUpperCase();
-            if (c === 'FOOD') return '🍜';
-            if (c === 'TRAVEL') return '🚄';
-            if (c === 'SHOPPING') return '🛍️';
-            if (c === 'SNOW') return '🏂'; 
-            if (c === 'HOTEL') return '🏨';
-            if (c.includes('COFFEE') || c.includes('MATCHA')) return '🍵';
-            return '📌';
         }
     </script>
+    <style>
+        /* Force Font */
+        body, button, input, div, span, h1, h2, h3, h4, p, a, i, code {
+            font-family: 'Outfit', sans-serif !important;
+        }
+
+        /* Shimmer Effect */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        .shimmer-text {
+            background: linear-gradient(90deg, #2C3E50 0%, #2C3E50 40%, #9CA3AF 50%, #2C3E50 60%, #2C3E50 100%);
+            background-size: 200% auto;
+            color: #2C3E50;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 3s linear infinite;
+        }
+
+        /* Timeline Line */
+        .timeline-line::before {
+            content: ''; position: absolute; top: 0; bottom: 0; left: 28px;
+            width: 2px; background: #E2E8F0; z-index: 0;
+        }
+
+        /* Glass Button */
+        .btn-silver {
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px);
+            border: 1px solid rgba(200, 200, 200, 0.5); box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        
+        /* Error Box */
+        #error-console { display: none; padding: 20px; background: #fee2e2; border: 2px solid #ef4444; color: #b91c1c; margin: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body class="bg-main-bg text-gray-700 min-h-screen">
+
+    <div id="error-console"></div>
+
+    <div id="landing-view" class="max-w-md mx-auto p-6 fade-in min-h-screen flex flex-col justify-center relative">
+        <header class="text-center mb-10">
+            <h1 class="shimmer-text text-7xl font-bold tracking-tighter uppercase leading-none mb-2">
+                Japan<br><span class="text-5xl font-semibold">2026</span>
+            </h1>
+            <p class="text-gray-400 text-xs font-bold tracking-[0.3em] mt-4 uppercase">Travel Itinerary</p>
+        </header>
+
+        <div id="loading" class="text-center py-10">
+            <div class="animate-pulse text-2xl text-gray-400 font-medium">Loading... ❄️</div>
+        </div>
+
+        <div id="days-grid" class="grid grid-cols-1 gap-5 mb-12"></div>
+
+        <footer class="text-center mt-8 pb-4">
+            <a href="https://cutebutpsycho44.github.io/JP-supposedly-shoppinglist/" target="_blank" class="inline-flex items-center gap-2 text-gray-400 hover:text-gray-800 transition-colors duration-300 group">
+                <svg viewBox="0 0 24 24" class="w-5 h-5 fill-current opacity-80 group-hover:opacity-100" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                <span class="text-xs font-bold tracking-widest uppercase opacity-80 group-hover:opacity-100">My Shopping List</span>
+            </a>
+        </footer>
+    </div>
+
+    <div id="detail-view" class="max-w-md mx-auto p-4 hidden relative min-h-screen pb-20">
+        <div class="sticky top-4 z-50 mb-8 flex justify-between items-center">
+            <button onclick="showLanding()" class="btn-silver text-accent-blue px-5 py-2 rounded-full font-bold text-sm flex items-center
