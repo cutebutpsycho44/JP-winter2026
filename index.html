@@ -15,44 +15,124 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Mali', 'cursive'],
-                    },
+                    fontFamily: { sans: ['Mali', 'cursive'] },
                     colors: {
-                        'pastel-bg': '#FFF9F0',      // พื้นหลังครีมๆ
-                        'pastel-pink': '#FFB7B2',    // ชมพู
-                        'pastel-green': '#B5EAD7',   // เขียวมิ้นท์
-                        'pastel-purple': '#E2F0CB',  // ม่วงอ่อน (จริงๆ โค้ดนี้ดูเขียวอ่อน แต่ตั้งชื่อตามพาเลท)
-                        'pastel-blue': '#C7CEEA',    // ฟ้าตุ่น
+                        'bg-cream': '#FFF9F0',     
+                        'card-white': '#FFFFFF',
+                        'accent-pink': '#FFB7B2',   
+                        'accent-green': '#B5EAD7',  
+                        'accent-blue': '#C7CEEA',
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-pastel-bg text-gray-600 min-h-screen p-4 sm:p-8">
+<body class="bg-bg-cream text-gray-600 min-h-screen p-4 sm:p-8">
 
     <div class="max-w-2xl mx-auto">
         
-        <header class="text-center mb-10 transform -rotate-1">
-            <h1 class="text-5xl font-bold text-gray-700 drop-shadow-sm mb-2">
-                Japan 2026 <span class="text-3xl">✈️</span>
+        <header class="text-center mb-10">
+            <h1 class="text-5xl font-bold text-gray-700 mb-2 drop-shadow-sm transform -rotate-2">
+                Japan 2026 <span class="text-4xl">🌸</span>
             </h1>
-            <div class="inline-block bg-pastel-pink text-white px-4 py-1 rounded-full text-sm font-bold rotate-2 shadow-sm">
+            <span class="bg-accent-pink text-white px-4 py-1 rounded-full text-sm font-bold shadow-sm">
                 Travel Itinerary
-            </div>
+            </span>
         </header>
 
-        <div id="loading" class="text-center py-12">
-            <div class="animate-bounce text-4xl mb-4">🍡</div>
-            <p>กำลังโหลดแผนเที่ยว...</p>
+        <div id="loading" class="text-center py-10">
+            <div class="animate-bounce text-4xl mb-3">🍡</div>
+            <p>Loading...</p>
         </div>
 
-        <div id="timeline-container" class="space-y-6 hidden">
+        <div id="timeline-container" class="space-y-5 hidden">
             </div>
 
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // ============================================
+        // 👇 เอาลิงก์ CSV จาก Google Sheet มาวางตรงนี้
+        // ============================================
+        const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSsNmpYBJTnOp4Wa3lQy3VeTolxfSHKzRaXXGnM2k_C8iq0hYC4MlLLqSIb12Ml8fDDw6AhPp6ePFds/pub?gid=289892197&single=true&output=csv"; 
+
+        // เริ่มทำงานเมื่อเปิดเว็บ
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+        });
+
+        function fetchData() {
+            Papa.parse(SHEET_CSV_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    renderTimeline(results.data);
+                },
+                error: function(err) {
+                    console.error("Error:", err);
+                    document.getElementById('loading').innerHTML = "❌ หาไฟล์ไม่เจอ อย่าลืมวางลิงก์ CSV นะ";
+                }
+            });
+        }
+
+        function renderTimeline(data) {
+            const container = document.getElementById('timeline-container');
+            const loading = document.getElementById('loading');
+            
+            loading.classList.add('hidden'); // ซ่อนตัวโหลด
+            container.classList.remove('hidden'); // แสดงข้อมูล
+
+            data.forEach((row, index) => {
+                // ข้ามบรรทัดว่าง
+                if (!row.Activity && !row.Time) return;
+
+                // สุ่มสีขอบการ์ด
+                const colors = ['border-accent-pink', 'border-accent-green', 'border-accent-blue'];
+                const randomColor = colors[index % colors.length];
+
+                // สร้างการ์ด HTML
+                const card = document.createElement('div');
+                card.className = `bg-card-white p-5 rounded-2xl border-l-8 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 ${randomColor}`;
+
+                // ใส่เนื้อหาข้างใน
+                // **หมายเหตุ: ตรง row.xxx ต้องตรงกับหัวตารางใน Sheet เป๊ะๆ**
+                card.innerHTML = `
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="bg-gray-100 px-3 py-1 rounded-lg text-sm font-bold">
+                                    🕒 ${row.Time || ''}
+                                </span>
+                                <span class="text-xs text-gray-400 font-bold uppercase tracking-wide">
+                                    ${row.Day || ''}
+                                </span>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-700 mb-1">
+                                ${row.Activity || 'No Title'}
+                            </h3>
+                            <p class="text-gray-500 text-sm">📍 ${row.Location || '-'}</p>
+                            ${row.Note ? `<p class="mt-2 text-xs text-gray-400 bg-gray-50 p-2 rounded">💡 ${row.Note}</p>` : ''}
+                        </div>
+                        <div class="text-3xl bg-gray-50 p-3 rounded-full">
+                            ${getIcon(row.Type)}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function getIcon(type) {
+            if (!type) return '✨';
+            let t = type.toLowerCase();
+            if (t.includes('food') || t.includes('กิน')) return '🍜';
+            if (t.includes('travel') || t.includes('เดินทาง')) return '🚄';
+            if (t.includes('shop') || t.includes('ช้อป')) return '🛍️';
+            if (t.includes('hotel') || t.includes('ที่พัก')) return '🏨';
+            if (t.includes('photo') || t.includes('รูป')) return '📸';
+            return '🎈';
+        }
+    </script>
 </body>
 </html>
