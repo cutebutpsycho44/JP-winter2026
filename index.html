@@ -73,6 +73,44 @@
             border: 1px solid rgba(200, 200, 200, 0.5);
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
+
+        /* Photo Button */
+        .btn-photo {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: #EDF2F7; color: #4A5568;
+            padding: 4px 10px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600;
+            transition: all 0.2s; cursor: pointer;
+            border: 1px solid #E2E8F0;
+        }
+        .btn-photo:hover { background: #E2E8F0; transform: translateY(-1px); }
+
+        /* Image Modal */
+        .img-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9); z-index: 2000;
+            justify-content: center; align-items: center;
+            backdrop-filter: blur(5px);
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .img-modal.active { display: flex; opacity: 1; }
+        
+        .modal-img-content {
+            max-width: 90%; max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .img-modal.active .modal-img-content { transform: scale(1); }
+
+        .close-img-btn {
+            position: absolute; top: 20px; right: 20px;
+            color: white; font-size: 3rem; cursor: pointer;
+            z-index: 2001; opacity: 0.8; transition: opacity 0.2s;
+            line-height: 1;
+        }
+        .close-img-btn:hover { opacity: 1; }
+
     </style>
 </head>
 <body class="bg-main-bg text-gray-700 min-h-screen">
@@ -121,8 +159,12 @@
         </div>
     </div>
 
+    <div id="image-modal" class="img-modal" onclick="closeImage()">
+        <span class="close-img-btn">×</span>
+        <img id="modal-img-src" class="modal-img-content" src="" alt="Activity Image">
+    </div>
+
     <script>
-        // ลิงก์ CSV ของคุณ
         const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSsNmpYBJTnOp4Wa3lQy3VeTolxfSHKzRaXXGnM2k_C8iq0hYC4MlLLqSIb12Ml8fDDw6AhPp6ePFds/pub?gid=289892197&single=true&output=csv";
 
         let allData = [];
@@ -132,7 +174,10 @@
         });
 
         function fetchData() {
-            Papa.parse(SHEET_CSV_URL, {
+            // Anti-Cache
+            const finalUrl = SHEET_CSV_URL + '&t=' + Date.now();
+
+            Papa.parse(finalUrl, {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
@@ -146,9 +191,8 @@
             });
         }
 
-        // --- Helper: Emoji ---
         function getDayEmoji(dayText) {
-            const d = dayText.toLowerCase().replace(/\s/g, ''); 
+            const d = (dayText || '').toLowerCase().replace(/\s/g, ''); 
             if (d.includes('day1')) return '✈️'; 
             if (d.includes('day2')) return '🗻'; 
             if (d.includes('day3') || d.includes('day4') || d.includes('day5')) return '🏂'; 
@@ -215,6 +259,33 @@
                 const catStyle = getCategoryStyle(row.Category);
                 const categoryIcon = getCategoryIcon(row.Category);
 
+                // --- 📸 Logic รองรับหลายรูป (Comma Separated) ---
+                let imageBtnHtml = '';
+                if (row.Image && row.Image.trim() !== '') {
+                    // แยก URL ด้วย comma และลบช่องว่าง
+                    const imageUrls = row.Image.split(',').map(url => url.trim()).filter(url => url !== '');
+                    
+                    if (imageUrls.length > 0) {
+                        imageBtnHtml = '<div class="flex flex-wrap gap-2 mt-3">'; // Container
+                        
+                        imageUrls.forEach((url, index) => {
+                            // ถ้ามีรูปเดียวใช้คำว่า View Photo ถ้าหลายรูปใช้ Photo 1, Photo 2
+                            const btnLabel = imageUrls.length > 1 ? `Photo ${index + 1}` : 'View Photo';
+                            
+                            imageBtnHtml += `
+                                <div class="btn-photo" onclick="openImage('${url}')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    ${btnLabel}
+                                </div>
+                            `;
+                        });
+                        
+                        imageBtnHtml += '</div>';
+                    }
+                }
+
                 item.innerHTML = `
                     <div class="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border-2 shadow-sm text-2xl bg-white z-10 ${catStyle.border} ${catStyle.bg}">
                         ${categoryIcon}
@@ -233,9 +304,11 @@
                         </div>
                         ` : ''}
                         
-                        <div class="text-gray-500 text-base font-medium leading-relaxed break-words text-balance mb-4">
+                        <div class="text-gray-500 text-base font-medium leading-relaxed break-words text-balance">
                             ${row.Activity || '-'}
                         </div>
+
+                        ${imageBtnHtml}
                         
                         ${(row.Departure || row.Arrival) ? `
                             <div class="flex flex-wrap gap-x-4 gap-y-2 mt-3 pt-3 border-t border-gray-100 text-sm text-gray-600 bg-gray-50/50 p-2 rounded-lg">
@@ -266,6 +339,22 @@
         function showLanding() {
             document.getElementById('detail-view').classList.add('hidden');
             document.getElementById('landing-view').classList.remove('hidden');
+        }
+
+        // --- Image Modal Functions ---
+        function openImage(url) {
+            const modal = document.getElementById('image-modal');
+            const img = document.getElementById('modal-img-src');
+            img.src = url;
+            modal.classList.add('active');
+        }
+
+        function closeImage() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('modal-img-src').src = '';
+            }, 300);
         }
 
         // Helpers
